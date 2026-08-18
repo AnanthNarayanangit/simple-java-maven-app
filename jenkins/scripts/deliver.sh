@@ -1,26 +1,53 @@
 #!/usr/bin/env bash
+set -e
 
-echo 'The following Maven command installs your Maven-built Java application'
-echo 'into the local Maven repository, which will ultimately be stored in'
-echo 'Jenkins''s local Maven repository (and the "maven-repository" Docker data'
-echo 'volume).'
-set -x
-mvn jar:jar install:install help:evaluate -Dexpression=project.name
-set +x
+echo '====================================================='
+echo '           DELIVER STAGE EXECUTION                   '
+echo '====================================================='
 
-echo 'The following command extracts the value of the <name/> element'
-echo 'within <project/> of your Java/Maven project''s "pom.xml" file.'
-set -x
-NAME=`mvn -q -DforceStdout help:evaluate -Dexpression=project.name`
-set +x
+MVN_CMD="mvn"
+if [ -f "./mvnw" ]; then
+    MVN_CMD="./mvnw"
+fi
 
-echo 'The following command behaves similarly to the previous one but'
-echo 'extracts the value of the <version/> element within <project/> instead.'
-set -x
-VERSION=`mvn -q -DforceStdout help:evaluate -Dexpression=project.version`
-set +x
+echo "Using Maven command: ${MVN_CMD}"
 
-echo 'The following command runs and outputs the execution of your Java'
-echo 'application (which Jenkins built using Maven) to the Jenkins UI.'
-set -x
-java -jar target/${NAME}-${VERSION}.jar
+NAME=$(${MVN_CMD} -q -DforceStdout help:evaluate -Dexpression=project.artifactId)
+VERSION=$(${MVN_CMD} -q -DforceStdout help:evaluate -Dexpression=project.version)
+JAR_FILE="target/${NAME}-${VERSION}.jar"
+
+echo "Target JAR: ${JAR_FILE}"
+
+if [ ! -f "${JAR_FILE}" ]; then
+    echo "JAR file not found, building package..."
+    ${MVN_CMD} package -DskipTests
+fi
+
+echo ""
+echo "--- 1. Testing Default Run ---"
+java -jar "${JAR_FILE}"
+
+echo ""
+echo "--- 2. Testing Help Output ---"
+java -jar "${JAR_FILE}" --help
+
+echo ""
+echo "--- 3. Testing Personalized Greeting ---"
+java -jar "${JAR_FILE}" --name "Jenkins CI/CD Pipeline"
+
+echo ""
+echo "--- 4. Testing Calculator ---"
+java -jar "${JAR_FILE}" --calc "128 * 4"
+
+echo ""
+echo "--- 5. Testing Statistics ---"
+java -jar "${JAR_FILE}" --stats "10,25,30,45,50,90"
+
+echo ""
+echo "--- 6. Testing System Info ---"
+java -jar "${JAR_FILE}" --sysinfo
+
+echo ""
+echo "====================================================="
+echo " Deliver stage verification completed successfully!  "
+echo "====================================================="
