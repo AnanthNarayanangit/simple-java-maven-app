@@ -1,23 +1,58 @@
 pipeline {
     agent any
+
     tools {
-        maven 'Maven3'   // name you configured in Jenkins tools
+        maven 'Maven3'
     }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+        timeout(time: 15, unit: 'MINUTES')
+    }
+
     stages {
-        stage('Build') {
+        stage('Compile') {
             steps {
-                sh 'mvn clean compile'
+                echo 'Compiling Java 21 sources...'
+                sh './mvnw clean compile'
             }
         }
-        stage('Test') {
+
+        stage('Test & Coverage') {
             steps {
-                sh 'mvn test'
+                echo 'Running unit tests and generating JaCoCo coverage reports...'
+                sh './mvnw test'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                }
             }
         }
+
+        stage('Package & Verify') {
+            steps {
+                echo 'Verifying quality gates and building executable JAR...'
+                sh './mvnw verify -DskipTests'
+            }
+        }
+
         stage('Deliver') {
             steps {
+                echo 'Executing application delivery verification script...'
                 sh './jenkins/scripts/deliver.sh'
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline succeeded! Archiving build artifacts...'
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'target/*.jar, target/site/jacoco/**', fingerprint: true
+        }
+        failure {
+            echo 'Pipeline failed. Please review test failures and build logs.'
         }
     }
 }

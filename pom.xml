@@ -6,37 +6,68 @@
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>my-app</name>
-  <url>https://maven.apache.org</url>
+  <description>Modern Java 21 CLI &amp; Utility Application with Maven, JUnit 5, Jacoco, and CI/CD</description>
+  <url>https://github.com/Abish-DM/simple-java-maven-app</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.release>21</maven.compiler.release>
+    <junit.jupiter.version>5.11.4</junit.jupiter.version>
+    <jacoco.version>0.8.12</jacoco.version>
+    <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+    <maven.surefire.plugin.version>3.5.2</maven.surefire.plugin.version>
+    <maven.jar.plugin.version>3.4.2</maven.jar.plugin.version>
+    <maven.enforcer.plugin.version>3.5.0</maven.enforcer.plugin.version>
+  </properties>
+
   <dependencies>
+    <!-- JUnit 5 Jupiter Aggregator (API + Engine + Params) -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>6.0.3</version>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.jupiter.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+
   <build>
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.15.0</version>
+          <version>${maven.compiler.plugin.version}</version>
           <configuration>
-            <release>21</release>
+            <release>${maven.compiler.release}</release>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven.surefire.plugin.version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
+
     <plugins>
+      <!-- Compiler Plugin -->
       <plugin>
-        <!-- Build an executable JAR -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+
+      <!-- Surefire Test Runner -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+
+      <!-- Executable JAR with Manifest -->
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.5.0</version>
+        <version>${maven.jar.plugin.version}</version>
         <configuration>
           <archive>
             <manifest>
@@ -47,10 +78,55 @@
           </archive>
         </configuration>
       </plugin>
+
+      <!-- JaCoCo Code Coverage -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check-coverage</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>0.80</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Maven Enforcer Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.2</version>
+        <version>${maven.enforcer.plugin.version}</version>
         <executions>
           <execution>
             <id>enforce-maven</id>
@@ -60,7 +136,7 @@
             <configuration>
               <rules>
                 <requireMavenVersion>
-                  <version>[3.9.9,)</version>
+                  <version>[3.8.0,)</version>
                 </requireMavenVersion>
                 <requireJavaVersion>
                   <version>[21,)</version>
